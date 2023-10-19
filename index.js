@@ -1,12 +1,12 @@
 import express from 'express';
 import 'dotenv/config';
 import client from './db/db.js';
-import loginRouter from './router/login.js';
+import authRouter from './router/auth.js';
 
 const app = express();
 app.use(express.json());
 
-app.use('/', loginRouter);
+app.use('/', authRouter);
 
 
 const port = process.env.PORT || 3001;

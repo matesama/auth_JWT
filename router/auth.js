@@ -2,8 +2,9 @@ import express from 'express';
 import Person from '../models/Person.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-const loginRouter = express.Router();
-loginRouter.use(express.urlencoded({ extended: true }));
+const authRouter = express.Router();
+//Middleware to parse to data html data
+authRouter.use(express.urlencoded({ extended: true }));
 
 const secret = process.env.SECRET_TOKEN;
 
@@ -31,13 +32,13 @@ const authMiddlewareFunc = (req, res, next) => {
 
 
 //Check all users in DB
-loginRouter.get('/', async (req, res) => {
+authRouter.get('/', async (req, res) => {
     const response = await Person.find(Person.username);
     res.json(response);
 })
 
 //register Persons
-loginRouter.post('/registerPerson', async (req, res) => {
+authRouter.post('/registerPerson', async (req, res) => {
     const {username, password} = req.body;
     try {
 
@@ -51,18 +52,18 @@ loginRouter.post('/registerPerson', async (req, res) => {
 })
 
 //Login Form
-loginRouter.get('/login', async (req, res) => {
+authRouter.get('/login', async (req, res) => {
     try {
         res.send(`
         <h1>Login Page:</h1>
         <form action='/connect' method='post'>
             <label for='username'>Username:</label>
-            <input type='text' id='username' name='username'> 
+            <input type='text' id='username' name='username' required> 
             </br>
             <label for='password'>Password:</label>
-            <input type='text' id='password' name='password'> 
+            <input type='password' id='password' name='password' required> 
             </br>
-            <input type='submit' value='Submit'>
+            <input type='submit' value='Login'>
         </form>
         `);
 
@@ -72,17 +73,23 @@ loginRouter.get('/login', async (req, res) => {
 })
 
 /*//Login process with username and password to get token first Part with static value
-loginRouter.post('/connect', async (req, res) => {
+authRouter.post('/connect', async (req, res) => {
     const {username, password} = req.body;
     try {
+        //check if the username John and password Doe
     if(!username === "John" && password === "Doe") {
         return res.redirect('/login')
     } else {
+        //create token from generateToken
         const token = generateToken({username: "John"});
         if(!token){
             res.redirect('/login');
         }
+        //Set the jwt as a header to the response
         res.set('token', token);
+        //other option
+        res.header("Authorization", 'Bearer ' + token) //Authorization property, Bearer value 
+        //Display in headers
         res.set('Access-Control-Expose-Headers', 'token');
         
         res.send(`
@@ -90,7 +97,7 @@ loginRouter.post('/connect', async (req, res) => {
         <form action='/checkJWT' method='post'>
             <label for='token'>Token:</label>
             <input type='text' id='token' name='token'> 
-            <input type='submit' value='Submit'>
+            <input type='submit' value='Login'>
         </form>
         `);
     }
@@ -100,7 +107,7 @@ loginRouter.post('/connect', async (req, res) => {
 })*/
 
 //Login process with username and password to get token connected to Mongo DB
-loginRouter.post('/connect', async (req, res) => {
+authRouter.post('/connect', async (req, res) => {
     const {username, password} = req.body;
     try {
         const person = await Person.findOne({username})
@@ -136,7 +143,7 @@ loginRouter.post('/connect', async (req, res) => {
 })
 
 //Verify via JWT token and redirect to the admin page 
-loginRouter.post('/checkJWT', authMiddlewareFunc, (req, res) => {
+authRouter.post('/checkJWT', authMiddlewareFunc, (req, res) => {
         
     try{
         const {token} = req.body;
@@ -145,7 +152,7 @@ loginRouter.post('/checkJWT', authMiddlewareFunc, (req, res) => {
                 return res.redirect('/login');
             }
             console.log(decoded)
-            res.redirect('/admin');
+            res.redirect('/admin')
         });
     } catch(err){
         res.status(500).send(err.message);
@@ -155,4 +162,4 @@ loginRouter.post('/checkJWT', authMiddlewareFunc, (req, res) => {
 
 
 
-export default loginRouter;
+export default authRouter;
