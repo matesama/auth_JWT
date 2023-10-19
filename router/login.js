@@ -18,10 +18,7 @@ const authMiddlewareFunc = (req, res, next) => {
         return res.sendStatus(401);
     }
 
-    const tokenData = token.split(' ')[1];
-    console.log(tokenData)
-
-    jwt.verify(tokenData, secret, (err, username) => {
+    jwt.verify(token, secret, (err, username) => {
         if(err){
             return res.sendStatus(401)
         }
@@ -148,6 +145,7 @@ loginRouter.post('/checkJWT', authMiddlewareFunc, (req, res) => {
                 return res.redirect('/login');
             }
             console.log(decoded)
+            res.redirect('/admin');
         });
     } catch(err){
         res.status(500).send(err.message);
